@@ -39,12 +39,13 @@ stdenv.mkDerivation rec {
       sha256 = "16acmdr27adma7gs9rs0dxdiqppm15vl3vv3agy7y8s94wyh4ybv";
     });
 
-  buildInputs = [ curl expat zlib bzip2 libarchive ]
+  buildInputs =
+    [ setupHook bzip2 curl expat libarchive zlib ]
     ++ optional useNcurses ncurses
     ++ optional useQt4 qt4;
 
   CMAKE_PREFIX_PATH = stdenv.lib.concatStringsSep ":" buildInputs;
-  
+
   configureFlags =
     "--docdir=/share/doc/${name} --mandir=/share/man --system-libs"
     + stdenv.lib.optionalString useQt4 " --qt-gui";
@@ -55,10 +56,17 @@ stdenv.mkDerivation rec {
 
   preConfigure = optionalString (stdenv ? glibc)
     ''
-      source $setupHook
       fixCmakeFiles .
-      substituteInPlace Modules/Platform/UnixPaths.cmake --subst-var-by glibc ${stdenv.glibc}
+      substituteInPlace Modules/Platform/UnixPaths.cmake \
+        --subst-var-by libc_bin ${getBin stdenv.cc.libc} \
+        --subst-var-by libc_dev ${getDev stdenv.cc.libc} \
+        --subst-var-by libc_lib ${getLib stdenv.cc.libc}
+      substituteInPlace Modules/FindCxxTest.cmake \
+        --replace "$""{PYTHON_EXECUTABLE}" ${stdenv.shell}
+      configureFlags="--parallel=''${NIX_BUILD_CORES:-1} $configureFlags"
     '';
+
+  hardeningDisable = [ "format" ];
 
   meta = {
     homepage = http://www.cmake.org/;
