@@ -5,8 +5,8 @@ let
   src = fetchFromGitHub {
     owner = "MaskRay";
     repo = "ccls";
-    rev = "43c3df6f28458c73a9bbc2ac99ec8e7472ca004c";
-    sha256 = "1zgpnbdlfhxbbpfgv9878lhir8ihifgzwmjckxzc72dw829w281k";
+    rev = "8d49b44154428c05150ad93a2dcb5d2e4914866e";
+    sha256 = "111b4ljfbx6j8bhm9lb922vi0brfzsg2004n76bpq35slik7pahg";
     fetchSubmodules = true;
   };
 
@@ -15,7 +15,7 @@ let
 in
 stdenv.mkDerivation rec {
   name    = "ccls-${version}";
-  version = "2018-09-09";
+  version = "2018-10-02";
 
   inherit src;
 
