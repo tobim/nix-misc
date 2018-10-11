@@ -7,9 +7,7 @@ self: super:
   cmake_3_12 = super.libsForQt5.callPackage pkgs/cmake/3.12.nix { };
 
   cmake_3_7 = super.callPackage pkgs/cmake/3.7.nix { };
-  cmake_3_2 = super.callPackage pkgs/cmake/3.2.nix {
-    inherit (super.darwin) ps;
-  };
+  cmake_3_2 = super.callPackage pkgs/cmake/3.2.nix { };
   cmake_3_1 = (self.cmake_3_2.overrideAttrs (oldAttrs: {
     name = "cmake-3.1";
     majorVersion = "3.1";

@@ -1,7 +1,8 @@
 { stdenv, fetchurl, pkgconfig
 , bzip2, curl, expat, jsoncpp, libarchive, xz, zlib
 , ps
-, useNcurses ? stdenv.isDarwin, ncurses
+, useSharedLibraries ? (!stdenv.isCygwin)
+, useNcurses ? false, ncurses
 , useQt4 ? false, qt4
 }:
 
@@ -26,11 +27,16 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  patches =
+  prePatch = optionalString (!useSharedLibraries) ''
+    substituteInPlace Utilities/cmlibarchive/CMakeLists.txt \
+      --replace '"-framework CoreServices"' '""'
+  '';
+
+  patches = [ ]
     # Don't search in non-Nix locations such as /usr, but do search in
     # Nixpkgs' Glibc.
-    optional (stdenv ? glibc) ./search-path-3.2.patch ++
-    optional (stdenv ? cross) (fetchurl {
+    ++ optional (stdenv ? glibc) ./search-path-3.2.patch
+    ++ optional (stdenv ? cross) (fetchurl {
       name = "fix-darwin-cross-compile.patch";
       url = "http://public.kitware.com/Bug/file_download.php?"
           + "file_id=4981&type=bug";
@@ -42,7 +48,7 @@ stdenv.mkDerivation rec {
     ++ optional useNcurses ncurses
     ++ optional useQt4 qt4;
 
-  propagatedBuildInputs = optional stdenv.isDarwin ps;
+  propagatedBuildInputs = [ ps ];
 
   CMAKE_PREFIX_PATH = stdenv.lib.concatStringsSep ":" buildInputs;
 
@@ -54,7 +60,9 @@ stdenv.mkDerivation rec {
     ]
     #++ optional (jsoncpp == null) "--no-system-jsoncpp"
     ++ optional true "--no-system-jsoncpp"
-    ++ optional useQt4 "--qt-gui";
+    ++ optional useQt4 "--qt-gui"
+    ++ [ "--" ]
+    ++ optional (!useNcurses) "-DBUILD_CursesDialog=OFF";
 
   setupHook = ./setup-hook.sh;
 
